@@ -1,0 +1,106 @@
+---
+- name: Create exporter system group
+  ansible.builtin.group:
+    name: "{{ postgres__exporter_user }}"
+    system: true
+    state: present
+
+- name: Create exporter system user
+  ansible.builtin.user:
+    name: "{{ postgres__exporter_user }}"
+    group: "{{ postgres__exporter_user }}"
+    system: true
+    create_home: false
+    shell: /usr/sbin/nologin
+    state: present
+
+- name: Download and prepare exporter on controller
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Create exporter cache directory
+      ansible.builtin.file:
+        path: "{{ __exporter_cache_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download exporter archive
+      ansible.builtin.get_url:
+        url: "{{ __exporter_url }}"
+        dest: "{{ __exporter_archive_path }}"
+        checksum: "sha256:{{ postgres__exporter_sha256 }}"
+        mode: "0644"
+        timeout: 60
+
+    - name: Extract exporter archive
+      ansible.builtin.unarchive:
+        src: "{{ __exporter_archive_path }}"
+        dest: "{{ __exporter_cache_dir }}"
+        remote_src: true
+        creates: "{{ __exporter_cache_dir }}/.extracted"
+
+    - name: Record successful extraction
+      ansible.builtin.copy:
+        content: "Extracted {{ postgres__exporter_version }}\n"
+        dest: "{{ __exporter_cache_dir }}/.extracted"
+        mode: "0644"
+
+    - name: Find exporter binary
+      ansible.builtin.find:
+        paths: "{{ __exporter_cache_dir }}"
+        patterns: postgres_exporter
+        file_type: file
+        recurse: true
+      register: __exporter_found
+
+    - name: Validate exporter binary discovery
+      ansible.builtin.assert:
+        that:
+          - __exporter_found.matched == 1
+        fail_msg: "Expected exactly one postgres_exporter binary"
+
+    - name: Save local binary path
+      ansible.builtin.set_fact:
+        __exporter_local_binary: "{{ __exporter_found.files[0].path }}"
+
+- name: Install exporter binary
+  ansible.builtin.copy:
+    src: "{{ __exporter_local_binary }}"
+    dest: "{{ __exporter_binary }}"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart PostgreSQL exporter
+
+- name: Create exporter systemd unit
+  ansible.builtin.template:
+    src: postgres-exporter.service.j2
+    dest: "/etc/systemd/system/{{ __exporter_service }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart PostgreSQL exporter
+
+- name: Apply exporter handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start PostgreSQL exporter
+  ansible.builtin.systemd_service:
+    name: "{{ __exporter_service }}"
+    state: started
+    enabled: true
+
+- name: Check PostgreSQL exporter metrics
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ postgres__exporter_port }}/metrics"
+    status_code: 200
+    return_content: true
+  register: __exporter_metrics
+  changed_when: false
+  until:
+    - (__exporter_metrics.status | default(0) | int) == 200
+    - "'pg_up 1' in (__exporter_metrics.content | default(''))"
+  retries: 8
+  delay: 2

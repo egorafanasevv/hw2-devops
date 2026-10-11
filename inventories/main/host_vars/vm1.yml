@@ -1,0 +1,14 @@
+---
+postgres__users:
+  - name: app_user
+    password: "{{ vault__app_user_password }}"
+    role_attr_flags: LOGIN
+
+  - name: postgres_exporter
+    role_attr_flags: LOGIN
+    groups:
+      - pg_monitor
+
+postgres__databases:
+  - name: app_db
+    owner: app_user

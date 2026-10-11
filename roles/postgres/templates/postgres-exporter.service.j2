@@ -1,0 +1,22 @@
+[Unit]
+Description=Prometheus PostgreSQL Exporter
+Wants={{ __pg_service_name }}
+After={{ __pg_service_name }}
+
+[Service]
+Type=simple
+User={{ postgres__exporter_user }}
+Group={{ postgres__exporter_user }}
+
+Environment="DATA_SOURCE_NAME=host=/var/run/postgresql user={{ postgres__exporter_user }} dbname=postgres port={{ postgres__opts.port | default(5432) }} sslmode=disable"
+
+ExecStart={{ __exporter_binary }} --web.listen-address=127.0.0.1:{{ postgres__exporter_port }}
+
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

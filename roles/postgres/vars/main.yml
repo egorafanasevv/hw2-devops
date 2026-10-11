@@ -1,0 +1,10 @@
+---
+__pg_bin_dir: "/usr/lib/postgresql/{{ postgres__version }}/bin"
+__pg_service_name: postgres-custom.service
+
+__exporter_service: postgres-exporter.service
+__exporter_binary: /usr/local/bin/postgres_exporter
+__exporter_cache_dir: "{{ playbook_dir }}/.cache/postgres_exporter/{{ postgres__exporter_version }}"
+__exporter_archive_name: "postgres_exporter-{{ postgres__exporter_version }}.linux-amd64.tar.gz"
+__exporter_archive_path: "{{ __exporter_cache_dir }}/{{ __exporter_archive_name }}"
+__exporter_url: "https://github.com/prometheus-community/postgres_exporter/releases/download/v{{ postgres__exporter_version }}/{{ __exporter_archive_name }}"

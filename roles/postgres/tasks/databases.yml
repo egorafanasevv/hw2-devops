@@ -1,0 +1,46 @@
+---
+- name: Create PostgreSQL users
+  community.postgresql.postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    role_attr_flags: "{{ item.role_attr_flags | default('LOGIN') }}"
+    state: "{{ item.state | default('present') }}"
+    login_db: postgres
+    login_user: postgres
+    login_unix_socket: /var/run/postgresql
+  become_user: postgres
+  loop: "{{ postgres__users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: "{{ item.password is defined }}"
+
+- name: Grant PostgreSQL role memberships
+  community.postgresql.postgresql_membership:
+    groups: "{{ item.groups | default([]) }}"
+    target_roles:
+      - "{{ item.name }}"
+    state: present
+    login_db: postgres
+    login_user: postgres
+    login_unix_socket: /var/run/postgresql
+  become_user: postgres
+  loop: "{{ postgres__users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.groups is defined
+    - (item.state | default('present')) == 'present'
+
+- name: Create PostgreSQL databases
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    owner: "{{ item.owner | default(omit) }}"
+    encoding: "{{ item.encoding | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
+    maintenance_db: postgres
+    login_user: postgres
+    login_unix_socket: /var/run/postgresql
+  become_user: postgres
+  loop: "{{ postgres__databases }}"
+  loop_control:
+    label: "{{ item.name }}"

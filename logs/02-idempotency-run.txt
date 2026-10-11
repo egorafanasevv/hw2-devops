@@ -1,0 +1,107 @@
+
+PLAY [Install PostgreSQL on vm1] ***********************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [vm1]
+
+TASK [postgres : Install PostgreSQL common tools] ******************************
+ok: [vm1]
+
+TASK [postgres : Disable automatic PostgreSQL cluster creation] ****************
+ok: [vm1]
+
+TASK [postgres : Install PostgreSQL packages] **********************************
+ok: [vm1]
+
+TASK [postgres : Create data root directory] ***********************************
+ok: [vm1]
+
+TASK [postgres : Create PostgreSQL parent directory] ***************************
+ok: [vm1]
+
+TASK [postgres : Create PostgreSQL data directory] *****************************
+ok: [vm1]
+
+TASK [postgres : Initialize PostgreSQL database cluster] ***********************
+ok: [vm1]
+
+TASK [postgres : Configure PostgreSQL parameters] ******************************
+ok: [vm1] => (item=listen_addresses)
+ok: [vm1] => (item=port)
+ok: [vm1] => (item=max_connections)
+ok: [vm1] => (item=unix_socket_directories)
+ok: [vm1] => (item=password_encryption)
+
+TASK [postgres : Configure PostgreSQL authentication] **************************
+ok: [vm1]
+
+TASK [postgres : Create PostgreSQL systemd unit] *******************************
+ok: [vm1]
+
+TASK [postgres : Apply pending handlers] ***************************************
+
+TASK [postgres : Enable and start PostgreSQL] **********************************
+ok: [vm1]
+
+TASK [postgres : Check PostgreSQL with SELECT 1] *******************************
+ok: [vm1]
+
+TASK [postgres : Create PostgreSQL users] **************************************
+ok: [vm1] => (item=None)
+ok: [vm1] => (item=postgres_exporter)
+ok: [vm1]
+
+TASK [postgres : Grant PostgreSQL role memberships] ****************************
+skipping: [vm1] => (item=app_user) 
+ok: [vm1] => (item=postgres_exporter)
+
+TASK [postgres : Create PostgreSQL databases] **********************************
+ok: [vm1] => (item=app_db)
+
+TASK [postgres : Create exporter system group] *********************************
+ok: [vm1]
+
+TASK [postgres : Create exporter system user] **********************************
+ok: [vm1]
+
+TASK [postgres : Create exporter cache directory] ******************************
+ok: [vm1 -> localhost]
+
+TASK [postgres : Download exporter archive] ************************************
+ok: [vm1 -> localhost]
+
+TASK [postgres : Extract exporter archive] *************************************
+skipping: [vm1]
+
+TASK [postgres : Record successful extraction] *********************************
+ok: [vm1 -> localhost]
+
+TASK [postgres : Find exporter binary] *****************************************
+ok: [vm1 -> localhost]
+
+TASK [postgres : Validate exporter binary discovery] ***************************
+ok: [vm1 -> localhost] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [postgres : Save local binary path] ***************************************
+ok: [vm1 -> localhost]
+
+TASK [postgres : Install exporter binary] **************************************
+ok: [vm1]
+
+TASK [postgres : Create exporter systemd unit] *********************************
+ok: [vm1]
+
+TASK [postgres : Apply exporter handlers] **************************************
+
+TASK [postgres : Enable and start PostgreSQL exporter] *************************
+ok: [vm1]
+
+TASK [postgres : Check PostgreSQL exporter metrics] ****************************
+ok: [vm1]
+
+PLAY RECAP *********************************************************************
+vm1                        : ok=28   changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+

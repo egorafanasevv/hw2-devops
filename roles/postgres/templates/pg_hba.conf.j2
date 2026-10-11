@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# TYPE DATABASE USER ADDRESS METHOD
+{% for rule in postgres__hba_rules %}
+{{ ([rule.type, rule.database, rule.user] + ([rule.address] if rule.address is defined else []) + [rule.method] + ([rule.options] if rule.options is defined else [])) | join(' ') }}
+{% endfor %}

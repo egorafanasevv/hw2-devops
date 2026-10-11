@@ -1,0 +1,26 @@
+vault-pass
+*.retry
+.ansible/
+.venv/
+__pycache__/
+.cache/
+
+# Промежуточные логи не отправляем
+/logs/*
+!/logs/01-full-playbook-run.txt
+!/logs/02-idempotency-run.txt
+!/logs/03-checks.md
+
+# Неиспользуемые заготовки Ansible Galaxy
+/roles/postgres/tests/
+/roles/postgres/meta/
+
+# Промежуточные логи не отправляем
+/logs/*
+!/logs/01-full-playbook-run.txt
+!/logs/02-idempotency-run.txt
+!/logs/03-checks.md
+
+# Неиспользуемые заготовки Ansible Galaxy
+/roles/postgres/tests/
+/roles/postgres/meta/
